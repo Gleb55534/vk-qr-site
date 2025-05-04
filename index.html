@@ -17,13 +17,11 @@
       align-items: center;
       padding: 20px;
     }
-
     h1 {
       background: rgba(0, 0, 0, 0.6);
       padding: 10px 20px;
       border-radius: 12px;
     }
-
     input, select, button {
       margin: 10px 0;
       padding: 10px;
@@ -32,22 +30,18 @@
       font-size: 16px;
       font-family: 'Montserrat', sans-serif;
     }
-
     input, select {
       width: 300px;
     }
-
     button {
       background-color: #4a76a8;
       color: white;
       cursor: pointer;
       font-weight: bold;
     }
-
     button:hover {
       background-color: #355b82;
     }
-
     .canvas-container {
       margin-top: 30px;
       background: rgba(255,255,255,0.9);
@@ -55,12 +49,10 @@
       border-radius: 20px;
       text-align: center;
     }
-
     canvas {
       display: block;
       margin: 0 auto 10px;
     }
-
     a.share-btn {
       display: inline-block;
       color: #fff;
@@ -71,11 +63,9 @@
       padding: 10px 20px;
       border-radius: 10px;
     }
-
     a.share-btn:hover {
       background-color: #355b82;
     }
-
     #preview-phone {
       margin-top: 40px;
       width: 390px;
@@ -89,7 +79,6 @@
       position: relative;
       animation: fadeInUp 1s ease forwards;
     }
-
     #preview-phone::before {
       content: "";
       position: absolute;
@@ -103,7 +92,6 @@
       z-index: 2;
       box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     }
-
     #preview-phone img {
       width: 100%;
       height: 100%;
@@ -112,12 +100,10 @@
       position: relative;
       z-index: 1;
     }
-
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(100px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-
     #toast {
       position: fixed;
       bottom: 30px;
@@ -131,6 +117,22 @@
       display: none;
       z-index: 1000;
     }
+    #music-player {
+      margin-top: 20px;
+      display: none;
+      position: relative;
+    }
+    #music-player .player-ui {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.1);
+      padding: 10px 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
   </style>
 </head>
 <body>
@@ -143,42 +145,34 @@
 
   <div class="canvas-container">
     <canvas id="canvas" width="360" height="440"></canvas>
-    <a id="download" download="vk_qr.png" class="share-btn">📥 Скачать QR-код</a>
+    <a id="download" download="vk_qr.png" class="share-btn">👅 Скачать QR-код</a>
     <button onclick="previewOnPhone()">📱 Предпросмотр на iPhone</button>
     <br>
     <a href="https://boosty.to/gleb555348/donate" target="_blank" class="share-btn" onclick="showToast()">💖 Поддержать</a>
     <a class="share-btn" href="#" onclick="shareVK()">🔗 Поделиться в VK</a>
     <a class="share-btn" href="#" onclick="shareWhatsApp()">📤 Поделиться в WhatsApp</a>
-    <br>
-    <button onclick="toggleMusic()">🎵 Пауза / Воспроизвести музыку</button>
   </div>
 
   <div id="preview-phone">
     <img id="preview-image" src="" alt="Предпросмотр QR-кода">
+    <div id="music-player">
+      <div class="player-ui">
+        <span style="color: #fff; font-weight: bold;">🎶 Играет музыка</span><br>
+        <button onclick="toggleMusic()" style="margin-top: 5px; padding: 6px 16px; background: #4a76a8; color: white; border: none; border-radius: 10px; font-weight: bold;">
+          ⏯ Пауза / Играть
+        </button>
+      </div>
+    </div>
   </div>
 
   <div id="toast">Спасибо за поддержку!</div>
 
-<!-- Музыка -->
-<audio id="backgroundMusic" loop autoplay>
-  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_8f9b43e37f.mp3" type="audio/mpeg">
-</audio>
+  <audio id="backgroundMusic" loop>
+    <source src="Спокойная и чувственная музыка без авторских прав для фона видео.mp3" type="audio/mpeg">
+    Ваш браузер не поддерживает аудио.
+  </audio>
 
-<!-- Кнопка управления -->
-<button onclick="toggleMusic()" style="margin-top: 15px;">🎵 Пауза / Играть</button>
-
-<script>
-  const music = document.getElementById("backgroundMusic");
-  function toggleMusic() {
-    if (music.paused) {
-      music.play();
-    } else {
-      music.pause();
-    }
-  }
-</script>
-
- <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
   <script>
     let avatarImg = null;
 
@@ -214,27 +208,33 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(qr.image, 40, 20, 280, 280);
 
-      const drawAvatar = () => {
-        if (avatarImg) {
-          const size = 50;
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(canvas.width / 2, 165, size / 2, 0, Math.PI * 2);
-          ctx.closePath();
-          ctx.clip();
-          ctx.drawImage(avatarImg, canvas.width / 2 - size / 2, 140, size, size);
-          ctx.restore();
-        }
-        ctx.fillStyle = "#000";
-        ctx.font = "bold 20px Montserrat";
-        ctx.textAlign = "center";
-        ctx.fillText("Сканируй меня", canvas.width / 2, 330);
-        ctx.font = "16px Montserrat";
-        ctx.fillText(`Моя страничка ВК: ${name}`, canvas.width / 2, 380);
-        document.getElementById("download").href = canvas.toDataURL("image/png");
-      };
+      if (avatarImg) {
+        const size = 50;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, 165, size / 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(avatarImg, canvas.width / 2 - size / 2, 140, size, size);
+        ctx.restore();
+      }
 
-      drawAvatar();
+      ctx.fillStyle = "#000";
+      ctx.font = "bold 20px Montserrat";
+      ctx.textAlign = "center";
+      ctx.fillText("Сканируй меня", canvas.width / 2, 330);
+      ctx.font = "16px Montserrat";
+      ctx.fillText(`Моя страничка ВК: ${name}`, canvas.width / 2, 380);
+      document.getElementById("download").href = canvas.toDataURL("image/png");
+
+      // Запуск музыки
+      const music = document.getElementById("backgroundMusic");
+      music.play().catch(err => {
+        console.log("Ошибка воспроизведения:", err);
+      });
+
+      // Показываем плеер
+      document.getElementById("music-player").style.display = "block";
     }
 
     function previewOnPhone() {
