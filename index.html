@@ -61,19 +61,19 @@
       margin: 0 auto 10px;
     }
 
-    a {
+    a.share-btn {
       display: inline-block;
-      color: #4a76a8;
-      margin-top: 10px;
+      color: #fff;
+      margin: 10px 5px 0;
       font-weight: bold;
       text-decoration: none;
-      background-color: #fff;
+      background-color: #4a76a8;
       padding: 10px 20px;
       border-radius: 10px;
     }
 
-    a:hover {
-      background-color: #f0f0f0;
+    a.share-btn:hover {
+      background-color: #355b82;
     }
 
     #preview-phone {
@@ -104,17 +104,6 @@
       box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     }
 
-    #preview-phone::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(145deg, rgba(255,255,255,0.15), rgba(255,255,255,0));
-      pointer-events: none;
-    }
-
     #preview-phone img {
       width: 100%;
       height: 100%;
@@ -125,48 +114,86 @@
     }
 
     @keyframes fadeInUp {
-      0% {
-        opacity: 0;
-        transform: translateY(100px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(100px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #4a76a8;
+      color: #fff;
+      padding: 15px 25px;
+      border-radius: 10px;
+      font-weight: bold;
+      display: none;
+      z-index: 1000;
     }
   </style>
 </head>
 <body>
   <h1>QR-код на ВКонтакте</h1>
 
-  <!-- Аудио и кнопка управления -->
-  <audio id="bg-music" loop>
-    <source src="https://www.bensound.com/bensound-music/bensound-dreams.mp3" type="audio/mpeg">
-    Ваш браузер не поддерживает аудио.
-  </audio>
-  <button onclick="toggleMusic()" id="music-button">🔈 Включить музыку</button>
-
-  <!-- Основной функционал -->
   <input type="text" id="link" placeholder="Ссылка на VK">
   <input type="text" id="name" placeholder="Ваше имя">
+  <input type="file" id="avatarInput" accept="image/*">
   <button onclick="generateQR()">Создать QR</button>
 
   <div class="canvas-container">
     <canvas id="canvas" width="360" height="440"></canvas>
-    <a id="download" download="vk_qr.png">📥 Скачать QR-код</a><br>
-    <button onclick="previewOnPhone()">📱 Предпросмотр на iPhone 15</button>
+    <a id="download" download="vk_qr.png" class="share-btn">📥 Скачать QR-код</a>
+    <button onclick="previewOnPhone()">📱 Предпросмотр на iPhone</button>
     <br>
-    <a href="https://boosty.to/gleb555348/donate" target="_blank" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#ff8132;color:#fff;border-radius:10px;font-weight:bold;text-decoration:none;box-shadow:0 4px 10px rgba(0,0,0,0.3);">
-      💖 Поддержать проект на Boosty
-    </a>
+    <a href="https://boosty.to/gleb555348/donate" target="_blank" class="share-btn" onclick="showToast()">💖 Поддержать</a>
+    <a class="share-btn" href="#" onclick="shareVK()">🔗 Поделиться в VK</a>
+    <a class="share-btn" href="#" onclick="shareWhatsApp()">📤 Поделиться в WhatsApp</a>
+    <br>
+    <button onclick="toggleMusic()">🎵 Пауза / Воспроизвести музыку</button>
   </div>
 
   <div id="preview-phone">
     <img id="preview-image" src="" alt="Предпросмотр QR-кода">
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <div id="toast">Спасибо за поддержку!</div>
+
+<!-- Музыка -->
+<audio id="backgroundMusic" loop autoplay>
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_8f9b43e37f.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Кнопка управления -->
+<button onclick="toggleMusic()" style="margin-top: 15px;">🎵 Пауза / Играть</button>
+
+<script>
+  const music = document.getElementById("backgroundMusic");
+  function toggleMusic() {
+    if (music.paused) {
+      music.play();
+    } else {
+      music.pause();
+    }
+  }
+</script>
+
+ <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
   <script>
+    let avatarImg = null;
+
+    document.getElementById("avatarInput").addEventListener("change", function (event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        avatarImg = new Image();
+        avatarImg.src = e.target.result;
+        avatarImg.onload = generateQR;
+      };
+      reader.readAsDataURL(file);
+    });
+
     function generateQR() {
       const link = document.getElementById("link").value.trim();
       const name = document.getElementById("name").value.trim();
@@ -187,24 +214,27 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(qr.image, 40, 20, 280, 280);
 
-      const logo = new Image();
-      logo.crossOrigin = "anonymous";
-      logo.src = "https://cdn-icons-png.flaticon.com/512/145/145813.png";
-      logo.onload = () => {
-        const size = 50;
-        ctx.drawImage(logo, canvas.width / 2 - size / 2, 140, size, size);
-
+      const drawAvatar = () => {
+        if (avatarImg) {
+          const size = 50;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(canvas.width / 2, 165, size / 2, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(avatarImg, canvas.width / 2 - size / 2, 140, size, size);
+          ctx.restore();
+        }
         ctx.fillStyle = "#000";
         ctx.font = "bold 20px Montserrat";
         ctx.textAlign = "center";
         ctx.fillText("Сканируй меня", canvas.width / 2, 330);
-
         ctx.font = "16px Montserrat";
         ctx.fillText(`Моя страничка ВК: ${name}`, canvas.width / 2, 380);
-
-        const downloadLink = document.getElementById("download");
-        downloadLink.href = canvas.toDataURL("image/png");
+        document.getElementById("download").href = canvas.toDataURL("image/png");
       };
+
+      drawAvatar();
     }
 
     function previewOnPhone() {
@@ -215,23 +245,32 @@
       phone.style.display = "block";
     }
 
-    // Музыка
-    let musicPlaying = false;
+    function showToast() {
+      const toast = document.getElementById("toast");
+      toast.style.display = "block";
+      setTimeout(() => { toast.style.display = "none"; }, 3000);
+    }
+
     function toggleMusic() {
-      const music = document.getElementById("bg-music");
-      const btn = document.getElementById("music-button");
-
-      if (musicPlaying) {
-        music.pause();
-        btn.textContent = "🔈 Включить музыку";
+      const music = document.getElementById("backgroundMusic");
+      if (music.paused) {
+        music.play();
       } else {
-        music.play().catch(() => {
-          alert("Автовоспроизведение не поддерживается. Нажмите кнопку ещё раз.");
-        });
-        btn.textContent = "🔇 Выключить музыку";
+        music.pause();
       }
+    }
 
-      musicPlaying = !musicPlaying;
+    function shareVK() {
+      const url = encodeURIComponent(document.getElementById("link").value);
+      const vkURL = `https://vk.com/share.php?url=${url}`;
+      window.open(vkURL, "_blank");
+    }
+
+    function shareWhatsApp() {
+      const url = encodeURIComponent(document.getElementById("link").value);
+      const text = encodeURIComponent("Смотри мой VK: ");
+      const waURL = `https://wa.me/?text=${text}${url}`;
+      window.open(waURL, "_blank");
     }
   </script>
 </body>
