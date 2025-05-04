@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VK QR-генератор</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background: url('518653_O.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px 20px;
+      border-radius: 12px;
+    }
+
+    input, select, button {
+      margin: 10px 0;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    input, select {
+      width: 300px;
+    }
+
+    button {
+      background-color: #4a76a8;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #355b82;
+    }
+
+    .canvas-container {
+      margin-top: 30px;
+      background: rgba(255,255,255,0.9);
+      padding: 20px;
+      border-radius: 20px;
+      text-align: center;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto 10px;
+    }
+
+    a {
+      display: inline-block;
+      color: #4a76a8;
+      margin-top: 10px;
+      font-weight: bold;
+      text-decoration: none;
+      background-color: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+    }
+
+    a:hover {
+      background-color: #f0f0f0;
+    }
+
+    #preview-phone {
+      margin-top: 40px;
+      width: 390px;
+      height: 844px;
+      background: radial-gradient(circle at center, #222 30%, #000 100%);
+      border: 18px solid #aaa;
+      border-radius: 56px;
+      box-shadow: 0 0 40px rgba(0,0,0,0.7), inset 0 0 30px rgba(255,255,255,0.15);
+      overflow: hidden;
+      display: none;
+      position: relative;
+      animation: fadeInUp 1s ease forwards;
+    }
+
+    #preview-phone::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 210px;
+      height: 30px;
+      background: #333;
+      border-radius: 0 0 20px 20px;
+      z-index: 2;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    #preview-phone::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(145deg, rgba(255,255,255,0.15), rgba(255,255,255,0));
+      pointer-events: none;
+    }
+
+    #preview-phone img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(100px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>QR-код на ВКонтакте</h1>
+
+  <input type="text" id="link" placeholder="Ссылка на VK">
+  <input type="text" id="name" placeholder="Ваше имя">
+  <button onclick="generateQR()">Создать QR</button>
+
+  <div class="canvas-container">
+    <canvas id="canvas" width="360" height="440"></canvas>
+    <a id="download" download="vk_qr.png">📥 Скачать QR-код</a><br>
+    <button onclick="previewOnPhone()">📱 Предпросмотр на iPhone 15</button>
+  </div>
+
+  <div id="preview-phone">
+    <img id="preview-image" src="" alt="Предпросмотр QR-кода">
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <script>
+    function generateQR() {
+      const link = document.getElementById("link").value.trim();
+      const name = document.getElementById("name").value.trim();
+      if (!link) return alert("Введите ссылку на VK");
+
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      const qr = new QRious({
+        value: link,
+        size: 280,
+        level: 'H',
+        foreground: '#000'
+      });
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(qr.image, 40, 20, 280, 280);
+
+      const logo = new Image();
+      logo.crossOrigin = "anonymous";
+      logo.src = "https://cdn-icons-png.flaticon.com/512/145/145813.png";
+      logo.onload = () => {
+        const size = 50;
+        ctx.drawImage(logo, canvas.width / 2 - size / 2, 140, size, size);
+
+        ctx.fillStyle = "#000";
+        ctx.font = "bold 20px Montserrat";
+        ctx.textAlign = "center";
+        ctx.fillText("Сканируй меня", canvas.width / 2, 330);
+
+        ctx.font = "16px Montserrat";
+        ctx.fillText(`Моя страничка ВК: ${name}`, canvas.width / 2, 380);
+
+        const downloadLink = document.getElementById("download");
+        downloadLink.href = canvas.toDataURL("image/png");
+      };
+    }
+
+    function previewOnPhone() {
+      const canvas = document.getElementById("canvas");
+      const img = document.getElementById("preview-image");
+      const phone = document.getElementById("preview-phone");
+      img.src = canvas.toDataURL("image/png");
+      phone.style.display = "block";
+    }
+  </script>
+</body>
+</html>
